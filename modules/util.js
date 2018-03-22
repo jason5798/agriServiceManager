@@ -67,13 +67,13 @@ function decodeBase64 (encodeStr) {
 }
 
 function decode (dataEncrypt, key) {
-    try {				
+    try {
         var encrypted  = CryptoJS.TripleDES.decrypt(dataEncrypt, key);
         return  encrypted.toString(CryptoJS.enc.Utf8);
     } catch (error) {
         return null;
     }
-} 
+}
 
 function encode (dataStr, key) {
     try {
@@ -85,7 +85,7 @@ function encode (dataStr, key) {
     } catch (error) {
         return null;
     }
-} 
+}
 
 function genToken(userInfo, dbUser, grps, callback) {
     let grpStr = '';
@@ -104,7 +104,7 @@ function genToken(userInfo, dbUser, grps, callback) {
     /* try {
         // create a 64-bit zero filled
         var iv = CryptoJS.lib.WordArray.create(64/8);
-        
+
         var ciphertext = CryptoJS.TripleDES.encrypt(payload, config.tokenKey, {iv: iv});
         var encryptedBase64 = ciphertext.toString();
         return callback(null, encryptedBase64);
@@ -124,7 +124,7 @@ function getDeviceTokenArr (token) {
     var tArr = tokenStr.split(':');
     return tArr;
 }
-  
+
 function checkDevice(mac, callback) {
     var datas = db.getDevices(mac, function(err, devices){
         if (err) {
@@ -170,12 +170,12 @@ function parseMsgd(obj, callback) {
                 if (debug) {
                     console.log(new Date() + 'Information : ' + JSON.stringify(mInfo));
                 }
-                
+
                 if(mInfo){
                     var msg = {macAddr: mMac, data: mData, timestamp: timestamp, recv: mRecv, date: mDate, extra: mExtra};
                     // console.log('**** '+msg.date +' mac:'+msg.macAddr+' => data:'+msg.data+'\ninfo:'+JSON.stringify(mInfo));
                     msg.information=mInfo;
-                    
+
                     if (debug) {
                         console.log(new Date() + 'parseMsgd message : ' + JSON.stringify(msg));
                     }
@@ -192,7 +192,7 @@ function parseMsgd(obj, callback) {
                 }
                 return callback({"error" : "No map of type " + type});
             }
-            
+
         }, function(reason) {
             if (debug) {
                 console.log(new Date() + 'parseMsgd findLast err : ' + reason);
@@ -217,7 +217,7 @@ function createMap () {
                             "water": "水含量",
                             "ec": "電導度"
                         },
-        map         :   { 
+        map         :   {
                             "ph": [4, 8, 11],
                             "water": [14, 18, 100],
                             "temperature": [ 18, 22, 100],
@@ -258,11 +258,11 @@ function getIntData(arrRange,initData){
     var end = arrRange[1];
     var diff = arrRange[2];
     var data = parseInt(initData.substring(start,end),16);
-    // example : 
+    // example :
     // diff = "data/100"
     // data = 2000
     // eval(diff) = 2000/100 = 20
-    
+
     return eval(diff);
 }
 
@@ -305,8 +305,8 @@ function checkAndParseDeviceToken (token, res, callback) {
         });
 		return callback(true);
 	}
-		
-	// Decrypt 
+
+	// Decrypt
 	console.log('token :\n' + token);
     var ar = getDeviceTokenArr(token);
     if (ar.length !== 5) {
@@ -375,8 +375,8 @@ function checkAndParseToken (token, res, callback) {
         });
 		return callback(true);
 	}
-		
-	// Decrypt 
+
+	// Decrypt
 	console.log('token :\n' + token);
     var tArr = getUserTokenArr(token);
     var ts = tArr[1];
@@ -387,7 +387,7 @@ function checkAndParseToken (token, res, callback) {
     actInfo['cpId'] = Number(tArr[3]);
     actInfo['roleId'] = Number(tArr[4]);
     actInfo['dataset'] = Number(tArr[5]);
-    
+
 	async.waterfall([
 		function(next){
 			mysqlTool.getHistory(token, function(err1, result1){
@@ -414,7 +414,7 @@ function checkAndParseToken (token, res, callback) {
             });
             return callback(true);
         }
-        
+
         //Get properties check
         if (results[1].length < 1) {
             res.send({
@@ -479,7 +479,7 @@ function checkAndParseMessage (message, callback) {
         } catch (error) {
             return callback(error.message);
         }
-        
+
         if (getType(mesObj) === 'other') {
             return callback('Not JSON');
         }
@@ -488,7 +488,7 @@ function checkAndParseMessage (message, callback) {
         var obj = message;
     }
     var json = {"macAddr": obj.macAddr, "extra.frameCnt": obj.frameCnt};
-    
+
 	async.series([
 		function(next){
 			mongoDevice.findLast(json, function(err1, result1){
@@ -504,7 +504,7 @@ function checkAndParseMessage (message, callback) {
         if(errs){
             console.log(new Date() + 'checkAndParseMessage err : ' + JSON.stringify(errs));
             return callback(errs);
-        } 
+        }
         // console.log('results[0] : ' + results[0]);
         // console.log('results[1] : ' + JSON.stringify(results[1]));
         if (results[0].length === 0) {
@@ -556,7 +556,7 @@ function checkFormData (req, checkArr) {
                 } else {
                     json[key] = req.body[key];
                 }
-                
+
                 count ++;
             }
         });
@@ -592,7 +592,7 @@ function DateTimezone(offset) {
 
     // 建立現在時間的物件
     var d = new Date();
-    
+
     // 取得 UTC time
     var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
 
@@ -602,13 +602,13 @@ function DateTimezone(offset) {
 }
 
 function getISODate(dateStr) {
-    var d = new Date(dateStr); 
-    
-    
+    var d = new Date(dateStr);
+
+
     console.log('d : ' + d.toISOString());
     console.log('offset : ' + d.getTimezoneOffset()/60 );
-    
-    d.setTime(d.getTime() + ( (-d.getTimezoneOffset()-480 ) *60*1000)); 
+
+    d.setTime(d.getTime() + ( (-d.getTimezoneOffset()-480 ) *60*1000));
     console.log('d + offset : ' + d.toISOString());
     /*var utcDate = d.toISOString();
     console.log('d utc : ' + utcDate);

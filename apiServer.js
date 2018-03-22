@@ -8,6 +8,7 @@ var routes = require('./routes/index');
 var todos = require('./routes/todos'),
     map = require('./routes/map')
     user = require('./routes/user');
+var cors = require('cors');
 //Jason add on 2017.02.16 - start
 
 var http = require('http'),
@@ -80,6 +81,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
 app.use(session({
   secret: config.cookieSecret,
   key: config.db,//cookie name
