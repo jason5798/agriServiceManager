@@ -14,7 +14,7 @@ module.exports = {
   "channelId": "",
   "channelSecret": "",
   "channelAccessToken": "",
-  "hostPort" : 8000,
+  "hostPort" : 8002,
   "baseurl" : '/v1/',
   //Myaql Database
   "database" : "cloudb",
@@ -41,5 +41,7 @@ module.exports = {
   "isLocalDB" : true,
   //MQTT
   "mqttHost" : "localhost",
-  "mqttPort" : 1883
+  "mqttPort" : 1883,
+  //isNeedLogin
+  "isNeedLogin" : false
 };

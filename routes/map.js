@@ -6,41 +6,61 @@ var util = require('../modules/util.js');
 var mongoMap = require('../modules/mongo/mongoMap.js');
 
 module.exports = (function() {
-    //Read 
+    //Read
 	router.get('/', function(req, res) {
-		var token = req.query.token;
-        if ( token === undefined) {
-			res.send({
-				"responseCode" : '999',
-				"responseMsg" : 'Missing parameter'
+
+		if (config.isNeedLogin) {
+			var token = req.query.token;
+			if ( token === undefined) {
+				res.send({
+					"responseCode" : '999',
+					"responseMsg" : 'Missing parameter'
+				});
+				return false;
+			}
+
+			util.checkAndParseToken(token, res,function(err,result){
+				if (err) {
+					return;
+				} else {
+					//Token is ok
+					mongoMap.find({}).then(function(data) {
+						// on fulfillment(已實現時)
+						res.status(200);
+						res.setHeader('Content-Type', 'application/json');
+						res.json({
+							"responseCode" : '000',
+							"data" : data
+						});
+					}, function(reason) {
+						// on rejection(已拒絕時)
+						res.send({
+							"responseCode" : '999',
+							"responseMsg" : reason
+						});
+					});
+				}
 			});
-			return false;
+		} else {
+			mongoMap.find({}).then(function(data) {
+				// on fulfillment(已實現時)
+				res.status(200);
+				res.setHeader('Content-Type', 'application/json');
+				res.json({
+					"responseCode" : '000',
+					"data" : data
+				});
+			}, function(reason) {
+				// on rejection(已拒絕時)
+				res.send({
+					"responseCode" : '999',
+					"responseMsg" : reason
+				});
+			});
 		}
 		
-        util.checkAndParseToken(token, res,function(err,result){
-			if (err) {
-				return;
-			} else { 
-				//Token is ok
-                mongoMap.find({}).then(function(data) {
-                    // on fulfillment(已實現時)
-                    res.status(200);
-					res.setHeader('Content-Type', 'application/json');
-					res.json({
-                        "responseCode" : '000',
-                        "data" : data
-                    });
-                }, function(reason) {
-                    // on rejection(已拒絕時)
-                    res.send({
-                        "responseCode" : '999',
-                        "responseMsg" : reason
-                    }); 
-                }); 
-			}
-		});
     });
-    
+
 	router.get('/:type', function(req, res) {
 		var token = req.query.token;
         var type = req.params.type;
@@ -52,11 +72,11 @@ module.exports = (function() {
 			return false;
 		}
         var json = {'deviceType': type};
-		
+
         util.checkAndParseToken(token, res,function(err,result){
 			if (err) {
 				return;
-			} else { 
+			} else {
 				//Token is ok
                 mongoMap.find(json).then(function(data) {
                     // on fulfillment(已實現時)
@@ -71,14 +91,14 @@ module.exports = (function() {
                     res.send({
                         "responseCode" : '999',
                         "responseMsg" : reason
-                    }); 
-                }); 
+                    });
+                });
 			}
 		});
 	});
-    
+
     router.post('/', function(req, res) {
-        var checkArr = ['token','deviceType','typeName','fieldName','map','createUser'];
+        var checkArr = ['deviceType','typeName','fieldName','map','createUser'];
         var obj = util.checkFormData(req, checkArr);
         if (obj === null) {
             res.send({
@@ -90,33 +110,51 @@ module.exports = (function() {
 				"responseCode" : '999',
 				"responseMsg" : obj
 			});
-        }
-        util.checkAndParseToken(req.body.token, res,function(err,result){
-			if (err) {
-				return;
-			} else { 
-				//Token is ok
-                mongoMap.create(obj).then(function(data) {
-                    // on fulfillment(已實現時)
-                    res.status(200);
-					res.setHeader('Content-Type', 'application/json');
-					res.json({
-                        "responseCode" : '000',
-                        "data" : 'Create map success'
-                    });
-                }, function(reason) {
-                    // on rejection(已拒絕時)
-                    res.send({
-                        "responseCode" : '999',
-                        "responseMsg" : reason
-                    }); 
-                }); 
-			}
-		});
+		}
+		if (config.isNeedLogin) {
+			util.checkAndParseToken(req.body.token, res,function(err,result){
+				if (err) {
+					return;
+				} else {
+					//Token is ok
+					mongoMap.create(obj).then(function(data) {
+						// on fulfillment(已實現時)
+						res.status(200);
+						res.setHeader('Content-Type', 'application/json');
+						res.json({
+							"responseCode" : '000',
+							"data" : 'Create map success'
+						});
+					}, function(reason) {
+						// on rejection(已拒絕時)
+						res.send({
+							"responseCode" : '999',
+							"responseMsg" : reason
+						});
+					});
+				}
+			});
+		} else {
+			mongoMap.create(obj).then(function(data) {
+				// on fulfillment(已實現時)
+				res.status(200);
+				res.setHeader('Content-Type', 'application/json');
+				res.json({
+					"responseCode" : '000',
+					"data" : 'Create map success'
+				});
+			}, function(reason) {
+				// on rejection(已拒絕時)
+				res.send({
+					"responseCode" : '999',
+					"responseMsg" : reason
+				});
+			});
+		}
 	});
 
 	router.put('/', function(req, res) {
-        var checkArr = ['token','deviceType'];
+        var checkArr = ['deviceType'];
         var obj = util.checkFormData(req, checkArr);
         if (obj === null) {
             res.send({
@@ -143,32 +181,49 @@ module.exports = (function() {
 		}
 
 		json.updateTime = new Date();
-
-        util.checkAndParseToken(req.body.token, res, function(err,result){
-			if (err) {
-				return;
-			} else { 
-				//Token is ok
-                mongoMap.update({"deviceType": req.body.deviceType}, json).then(function(data) {
-                    // on fulfillment(已實現時)
-                    res.status(200);
-					res.setHeader('Content-Type', 'application/json');
-					res.json({
-                        "responseCode" : '000',
-                        "data" : data
-                    });
-                }, function(reason) {
-                    // on rejection(已拒絕時)
-                    res.send({
-                        "responseCode" : '999',
-                        "responseMsg" : reason
-                    }); 
-                }); 
-			}
-		});
+		if (config.isNeedLogin) {
+			util.checkAndParseToken(req.body.token, res, function(err,result){
+				if (err) {
+					return;
+				} else {
+					//Token is ok
+					mongoMap.update({"deviceType": req.body.deviceType}, json).then(function(data) {
+						// on fulfillment(已實現時)
+						res.status(200);
+						res.setHeader('Content-Type', 'application/json');
+						res.json({
+							"responseCode" : '000',
+							"data" : data
+						});
+					}, function(reason) {
+						// on rejection(已拒絕時)
+						res.send({
+							"responseCode" : '999',
+							"responseMsg" : reason
+						});
+					});
+				}
+			});
+		} else {
+			mongoMap.update({"deviceType": req.body.deviceType}, json).then(function(data) {
+				// on fulfillment(已實現時)
+				res.status(200);
+				res.setHeader('Content-Type', 'application/json');
+				res.json({
+					"responseCode" : '000',
+					"data" : data
+				});
+			}, function(reason) {
+				// on rejection(已拒絕時)
+				res.send({
+					"responseCode" : '999',
+					"responseMsg" : reason
+				});
+			});
+		}
 	});
 
-	//Delete by ID 
+	//Delete by ID
 	router.delete('/', function(req, res) {
 		if (req.body.deviceType === null) {
             res.send({
@@ -176,31 +231,49 @@ module.exports = (function() {
 				"responseMsg" : 'Missing parameter'
 			});
 		}
-		util.checkAndParseToken(req.body.token, res,function(err,result){
-			if (err) {
-				return;
-			} else { 
-				//Token is ok
-                mongoMap.remove({"deviceType": req.body.deviceType}).then(function(data) {
-                    // on fulfillment(已實現時)
-                    res.status(200);
-					res.setHeader('Content-Type', 'application/json');
-					res.json({
-                        "responseCode" : '000',
-                        "data" : data
-                    });
-                }, function(reason) {
-                    // on rejection(已拒絕時)
-                    res.send({
-                        "responseCode" : '999',
-                        "responseMsg" : reason
-                    }); 
-                }); 
-			}
-		});
+		if (config.isNeedLogin) {
+			util.checkAndParseToken(req.body.token, res,function(err,result){
+				if (err) {
+					return;
+				} else {
+					//Token is ok
+					mongoMap.remove({"deviceType": req.body.deviceType}).then(function(data) {
+						// on fulfillment(已實現時)
+						res.status(200);
+						res.setHeader('Content-Type', 'application/json');
+						res.json({
+							"responseCode" : '000',
+							"data" : data
+						});
+					}, function(reason) {
+						// on rejection(已拒絕時)
+						res.send({
+							"responseCode" : '999',
+							"responseMsg" : reason
+						});
+					});
+				}
+			});
+		} else {
+			mongoMap.remove({"deviceType": req.body.deviceType}).then(function(data) {
+				// on fulfillment(已實現時)
+				res.status(200);
+				res.setHeader('Content-Type', 'application/json');
+				res.json({
+					"responseCode" : '000',
+					"data" : data
+				});
+			}, function(reason) {
+				// on rejection(已拒絕時)
+				res.send({
+					"responseCode" : '999',
+					"responseMsg" : reason
+				});
+			});
+		}
 	});
 
 	return router;
 
 })();
-     
+

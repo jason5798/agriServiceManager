@@ -10,17 +10,19 @@ var test = true;
 var crypto = require('crypto');
 var moment = require('moment');
 var axios = require('axios');
+var isToken = false;
 
 module.exports = function(app) {
 	app.get('/', checkLogin);
 	app.get('/', function (req, res) {
-			var testObj = JsonFileTools.getJsonFromFile(path2);
+			/*var testObj = JsonFileTools.getJsonFromFile(path2);
 			test = testObj.test;
 			res.render('index', {
 				title: '首頁',
 				device: null,
 				test: test
-			});
+			});*/
+			res.redirect('/map');
 	});
 
 	app.get('/login', checkNotLogin);
@@ -159,13 +161,16 @@ module.exports = function(app) {
 
   	});
 
-    app.get('/map', checkLogin);
+    //app.get('/map', checkLogin);
     app.get('/map', function (req, res) {
 		var postType = req.flash('type').toString();
 		var successMessae,errorMessae;
 		errorMessae = req.flash('error').toString();
-	    var user = req.session.user;
-	    var token = encodeURI(user.authToken);
+		var user = req.session.user;
+		var token = null;
+		if (config.isNeedLogin) {
+			token = encodeURI(user.authToken);
+		}
 		var url = 'http://'+config.host+':' + config.hostPort + '/map' + config.baseurl;
 		// url = 'http://localhost:8001/map/v1/';
 		var index = 0;
@@ -422,7 +427,7 @@ module.exports = function(app) {
 };
 
 function checkLogin(req, res, next) {
-	if (!req.session.user) {
+	if (!req.session.user && config.isNeedLogin) {
 	  req.flash('error', 'No Register!');
 	  res.redirect('/login');
 	}else{
